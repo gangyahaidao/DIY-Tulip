@@ -3,7 +3,7 @@
 #include "SoftPWM.h"
 
 #define NEOPIXEL_PIN A0
-#define TOUCH_SENSOR_PIN 2
+#define TOUCH_SENSOR_PIN 2 // 此引脚接一个贴片触摸传感器
 
 #define SERVO_PIN 9
 //#define SERVO_OPEN 1750
@@ -29,14 +29,12 @@ byte newRGB[] = {0, 0, 0};
 #define MODE_FALLINGASLEEP 9
 #define MODE_RAINBOW 90
 
-byte mode = MODE_SLEEPING;
+byte mode = MODE_SLEEPING; // 默认启动状态
 
 byte petalPins[] = {3, 4, 5, 6, 10, 11};
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(7, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ400);
 Servo servo;
-
-int servoChange = 1; // open
 int servoPosition = SERVO_SAFE_MIDDLE;
 
 void setup() {
@@ -44,7 +42,7 @@ void setup() {
   pixels.begin();
   servo.attach(SERVO_PIN, SERVO_CLOSED, SERVO_OPEN);
 
-  pinMode(TOUCH_SENSOR_PIN, INPUT);
+  pinMode(TOUCH_SENSOR_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(TOUCH_SENSOR_PIN), _touchISR, RISING);
 
   randomSeed(analogRead(A7));
@@ -73,7 +71,7 @@ void loop() {
       done = openPetals() && done;
       done = petalsBloom(counter) && done;
       if (done) {
-        changeMode(MODE_BLOOMED);
+        changeMode(MODE_RAINBOW); // 开完花之后处于彩虹闪烁状态
       }
       break;
 
@@ -123,7 +121,7 @@ void _touchISR() {
   if (mode == MODE_SLEEPING) { // 启动默认状态
     changeMode(MODE_BLOOM); // 运行完成之后变成'MODE_BLOOMED'状态
   }
-  else if (mode == MODE_BLOOMED) {
+  else if (mode == MODE_RAINBOW) {
     changeMode(MODE_FADE); // 运行完成之后变成'MODE_SLEEPING'状态
   }
 }
@@ -226,19 +224,6 @@ void prepareCrossFade(byte red, byte green, byte blue, unsigned int duration) {
   newRGB[RED] = red;
   newRGB[GREEN] = green;
   newRGB[BLUE] = blue;
-
-  Serial.print(newRGB[RED]);
-  Serial.print(" ");
-  Serial.print(newRGB[GREEN]);
-  Serial.print(" ");
-  Serial.print(newRGB[BLUE]);
-  Serial.print(" (");
-  Serial.print(changeRGB[RED]);
-  Serial.print(" ");
-  Serial.print(changeRGB[GREEN]);
-  Serial.print(" ");
-  Serial.print(changeRGB[BLUE]);
-  Serial.println(")");
 }
 
 boolean crossFade() {
